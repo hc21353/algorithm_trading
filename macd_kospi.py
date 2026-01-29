@@ -357,6 +357,12 @@ class FiniteStrategyVisualizer:
         ax4.grid(True, alpha=0.3)
 
         plt.tight_layout()
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"1_dashboard_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
 
 
@@ -426,6 +432,12 @@ class FiniteAdvancedVisualizer:
         ax3.grid(True, alpha=0.3)
         
         plt.tight_layout()
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"2_detailed_trading_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
 
     def plot_return_distribution(self):
@@ -468,6 +480,12 @@ class FiniteAdvancedVisualizer:
         plt.xlabel("수익률 (%)")
         plt.legend()
         plt.grid(True, alpha=0.3)
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"3_return_distribution_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
 
 
@@ -566,6 +584,12 @@ class EnhancedVisualization:
                 bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.4))
         
         plt.tight_layout()
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"4_weight_distribution_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
         print("✅ 가중치 분포 곡선 완료\n")
     
@@ -573,18 +597,6 @@ class EnhancedVisualization:
     def plot_standard_vs_mutant_comparison(self):
         """
         [2/4] Standard vs Mutant 비교 (개선됨)
-        
-        ★ 주요 개선사항:
-        1. Standard MACD는 각 EMA마다 다른 alpha 사용 (12→0.1538, 26→0.0741, 9→0.2)
-        2. 상단: 절대값 비교 (막대 그래프)
-        3. 중단: 상대적 개선율 (%)
-        4. 하단: 상세 수치 테이블
-        
-        ★ 개선율 계산 방식:
-        - SNR, Trades, Gross Profit: (Mutant - Standard) / Standard * 100
-        - Win Rate: 절대 포인트 차이 (예: 65% - 60% = +5p)
-        - Gross Loss: 손실 감소율 = (Standard - Mutant) / Standard * 100
-          (손실이 줄어들면 양수)
         """
         print("\n📊 [2/4] Standard vs Mutant MACD 비교 중...")
         
@@ -777,6 +789,12 @@ class EnhancedVisualization:
                 table[(i, 3)].set_facecolor('lightcoral')
         
         plt.tight_layout()
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"5_standard_vs_mutant_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
         
         print("\n📊 비교 요약:")
@@ -921,6 +939,12 @@ class EnhancedVisualization:
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
         plt.tight_layout()
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"6_histogram_zoom_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
         print("✅ 히스토그램 확대 비교 완료\n")
     
@@ -1010,6 +1034,12 @@ class EnhancedVisualization:
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
         
         plt.tight_layout()
+        
+        # ★★★ PNG 저장 추가 ★★★
+        filename = f"7_ema_crossover_{self.opt.ticker}.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"💾 저장: {filename}")
+        
         plt.show()
         print("✅ EMA Crossover Dynamics 완료\n")
     
@@ -1090,7 +1120,7 @@ class FiniteDataExporter:
 # [MAIN] 실행
 # ==============================================================================
 if __name__ == "__main__":
-    optimizer = FiniteMACDOptimizer(ticker="005930.ks", start_date="2013-01-01", end_date="2025-12-31")
+    optimizer = FiniteMACDOptimizer(ticker="^KS11", start_date="2010-01-01", end_date="2026-01-25")
     optimizer.run_optimization()
     
     if not optimizer.results_df.empty:
