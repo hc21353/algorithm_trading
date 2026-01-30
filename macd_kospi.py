@@ -238,9 +238,9 @@ class FiniteMACDOptimizer:
         results = []
 
         # === 탐색 범위 (학술적 근거 기반) ===
-        alpha_range = np.arange(0.005, 0.5, 0.005)
-        short_range = range(20, 70, 1)
-        long_range  = range(100, 260, 1)
+        alpha_range = np.arange(0.001, 0.5, 0.001)
+        short_range = range(5, 70, 1)
+        long_range  = range(10, 260, 1)
         
         count = 0
         total_estim = len(alpha_range) * len(short_range) * len(long_range) * 2 
@@ -490,10 +490,10 @@ class FiniteAdvancedVisualizer:
 
 
 # ==============================================================================
-# [Class 5] Enhanced Visualization Suite (파라미터 히트맵, 엘보 포인트 제거)
+# [Class 5] Enhanced Visualization Suite (2개만 유지)
 # ==============================================================================
 class EnhancedVisualization:
-    """추가 시각화 (4개만 유지)"""
+    """추가 시각화 (2개만 유지)"""
     
     def __init__(self, optimizer, adv_visualizer):
         self.opt = optimizer
@@ -513,8 +513,8 @@ class EnhancedVisualization:
     
     
     def plot_weight_distribution(self):
-        """[1/4] 가중치 분포 곡선"""
-        print("\n📊 [1/4] 가중치 분포 곡선 생성 중...")
+        """[1/2] 가중치 분포 곡선"""
+        print("\n📊 [1/2] 가중치 분포 곡선 생성 중...")
         
         N_long = int(self.best['long_N'])
         N_short = int(self.best['short_N'])
@@ -596,9 +596,24 @@ class EnhancedVisualization:
     
     def plot_standard_vs_mutant_comparison(self):
         """
-        [2/4] Standard vs Mutant 비교 (개선됨)
+        [2/2] Standard vs Mutant 비교 (개선됨)
         """
-        print("\n📊 [2/4] Standard vs Mutant MACD 비교 중...")
+        print("\n📊 [2/2] Standard vs Mutant MACD 비교 중...")
+
+        """
+        [2/4] Standard vs Mutant 비교 (개선됨)
+        ★ 주요 개선사항:
+        1. Standard MACD는 각 EMA마다 다른 alpha 사용
+        2. 상단: 절대값 비교 (막대 그래프)
+        3. 중단: 상대적 개선율 (%)
+        4. 하단: 상세 수치 테이블
+
+        ★ 개선율 계산 방식:
+        - SNR, Trades, Gross Profit: (Mutant - Standard) / Standard * 100
+        - Win Rate: 절대 포인트 차이 (예: 65% - 60% = +5p)
+        - Gross Loss: 손실 감소율 = (Standard - Mutant) / Standard * 100
+          (손실이 줄어들면 양수)
+        """
         
         # Standard MACD 계산 (각 EMA는 다른 alpha)
         print("   Standard MACD(12,26,9) 백테스트 실행 중...")
@@ -808,253 +823,15 @@ class EnhancedVisualization:
         print("✅ Standard vs Mutant 비교 완료\n")
     
     
-    def plot_histogram_zoom_comparison(self):
-        """[3/4] 히스토그램 확대 비교"""
-        print("\n📊 [3/4] 히스토그램 확대 비교 생성 중...")
-        
-        print("   Standard MACD 계산 중...")
-        std_engine = StandardMACD(short_N=12, long_N=26, signal_N=9)
-        standard_df = std_engine.calculate(self.opt.df, price_col='Close')
-        standard_hist = standard_df['std_hist']
-        
-        mutant_hist = self.adv_viz.hist
-        
-        window_size = 60
-        rolling_std = self.df['Close'].rolling(window_size).std()
-        high_volatility_indices = rolling_std[rolling_std > rolling_std.quantile(0.8)].index
-        
-        if len(high_volatility_indices) == 0:
-            print("⚠️ 적절한 확대 구간을 찾을 수 없습니다.\n")
-            return
-        
-        mid_idx = len(high_volatility_indices) // 2
-        zoom_center = high_volatility_indices[mid_idx]
-        zoom_range_size = 30
-        zoom_start = max(0, self.df.index.get_loc(zoom_center) - zoom_range_size)
-        zoom_end = min(len(self.df), self.df.index.get_loc(zoom_center) + zoom_range_size)
-        zoom_range = self.df.index[zoom_start:zoom_end]
-        
-        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(18, 12), sharex=True,
-                                            gridspec_kw={'height_ratios': [2, 1, 1]})
-        
-        ax1.plot(zoom_range, self.df.loc[zoom_range, 'Close'],
-                color='black', linewidth=2, label='Price')
-        
-        standard_buy = (standard_hist.shift(1) <= 0) & (standard_hist > 0)
-        standard_sell = (standard_hist.shift(1) >= 0) & (standard_hist < 0)
-        mutant_buy = self.adv_viz.buy_sig
-        mutant_sell = self.adv_viz.sell_sig
-        
-        standard_buy_zoom = standard_buy.loc[zoom_range]
-        standard_sell_zoom = standard_sell.loc[zoom_range]
-        mutant_buy_zoom = mutant_buy.loc[zoom_range]
-        mutant_sell_zoom = mutant_sell.loc[zoom_range]
-        
-        ax1.scatter(zoom_range[standard_buy_zoom], 
-                   self.df.loc[zoom_range[standard_buy_zoom], 'Close'],
-                   marker='^', s=100, color='blue', alpha=0.4, 
-                   edgecolors='darkblue', linewidths=1, label='Standard Buy', zorder=3)
-        ax1.scatter(zoom_range[standard_sell_zoom], 
-                   self.df.loc[zoom_range[standard_sell_zoom], 'Close'],
-                   marker='v', s=100, color='cyan', alpha=0.4, 
-                   edgecolors='darkcyan', linewidths=1, label='Standard Sell', zorder=3)
-        ax1.scatter(zoom_range[mutant_buy_zoom], 
-                   self.df.loc[zoom_range[mutant_buy_zoom], 'Close'],
-                   marker='^', s=200, color='red', alpha=0.9, 
-                   edgecolors='darkred', linewidths=2, label='Mutant Buy', zorder=5)
-        ax1.scatter(zoom_range[mutant_sell_zoom], 
-                   self.df.loc[zoom_range[mutant_sell_zoom], 'Close'],
-                   marker='v', s=200, color='orange', alpha=0.9, 
-                   edgecolors='darkorange', linewidths=2, label='Mutant Sell', zorder=5)
-        
-        ax1.set_title(f"주가 차트 및 매매 신호 비교 (확대 구간)\n" +
-                     f"{zoom_range[0].date()} ~ {zoom_range[-1].date()}",
-                     fontsize=14, fontweight='bold')
-        ax1.set_ylabel('Price', fontsize=11)
-        ax1.legend(loc='upper left', fontsize=10)
-        ax1.grid(True, alpha=0.3)
-        
-        standard_hist_zoom = standard_hist.loc[zoom_range]
-        colors_standard = np.where(standard_hist_zoom >= 0, 'blue', 'cyan')
-        ax2.bar(zoom_range, standard_hist_zoom, color=colors_standard, alpha=0.6, width=1.0)
-        ax2.axhline(0, color='black', linewidth=1)
-        
-        crossing_points_std = zoom_range[(standard_buy_zoom) | (standard_sell_zoom)]
-        ax2.scatter(crossing_points_std, [0] * len(crossing_points_std),
-                   marker='o', s=100, color='yellow', edgecolors='black', 
-                   linewidths=1.5, zorder=10)
-        
-        ax2.set_title("Standard MACD Histogram (12,26,9)", fontsize=12, fontweight='bold')
-        ax2.set_ylabel('Histogram', fontsize=10)
-        ax2.grid(True, alpha=0.3)
-        
-        standard_signals = pd.Series(0, index=zoom_range)
-        standard_signals[standard_buy_zoom] = 1
-        standard_signals[standard_sell_zoom] = -1
-        
-        signal_changes = standard_signals[standard_signals != 0]
-        if len(signal_changes) > 1:
-            intervals = np.diff(signal_changes.index.to_julian_date())
-            short_intervals = intervals[intervals < 5]
-            whipsaw_count = len(short_intervals)
-        else:
-            whipsaw_count = 0
-        
-        ax2.text(0.02, 0.95, f'Whipsaw 의심 신호: {whipsaw_count}회',
-                transform=ax2.transAxes, ha='left', va='top', fontsize=9,
-                bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.5))
-        
-        mutant_hist_zoom = mutant_hist.loc[zoom_range]
-        colors_mutant = np.where(mutant_hist_zoom >= 0, 'red', 'blue')
-        ax3.bar(zoom_range, mutant_hist_zoom, color=colors_mutant, alpha=0.6, width=1.0)
-        ax3.axhline(0, color='black', linewidth=1)
-        
-        crossing_points_mut = zoom_range[(mutant_buy_zoom) | (mutant_sell_zoom)]
-        ax3.scatter(crossing_points_mut, [0] * len(crossing_points_mut),
-                   marker='o', s=100, color='gold', edgecolors='red', 
-                   linewidths=2, zorder=10)
-        
-        ax3.set_title(f"Mutant MACD Histogram ({int(self.best['short_N'])},{int(self.best['long_N'])},{int(self.best['signal_N'])})",
-                     fontsize=12, fontweight='bold')
-        ax3.set_xlabel('Date', fontsize=11)
-        ax3.set_ylabel('Histogram', fontsize=10)
-        ax3.grid(True, alpha=0.3)
-        
-        mutant_signals = pd.Series(0, index=zoom_range)
-        mutant_signals[mutant_buy_zoom] = 1
-        mutant_signals[mutant_sell_zoom] = -1
-        mutant_signal_count = (mutant_signals != 0).sum()
-        
-        ax3.text(0.02, 0.95, f'총 신호: {mutant_signal_count}회',
-                transform=ax3.transAxes, ha='left', va='top', fontsize=9,
-                bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5))
-        
-        comparison_text = (f"신호 비교:\n"
-                          f"  Standard: {(standard_signals != 0).sum()}회\n"
-                          f"  Mutant: {mutant_signal_count}회\n"
-                          f"→ Mutant는 노이즈 필터링으로\n"
-                          f"  불필요한 신호 {(standard_signals != 0).sum() - mutant_signal_count}회 제거")
-        ax1.text(0.98, 0.02, comparison_text, transform=ax1.transAxes,
-                ha='right', va='bottom', fontsize=9,
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
-        plt.tight_layout()
-        
-        # ★★★ PNG 저장 추가 ★★★
-        filename = f"6_histogram_zoom_{self.opt.ticker}.png"
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
-        print(f"💾 저장: {filename}")
-        
-        plt.show()
-        print("✅ 히스토그램 확대 비교 완료\n")
-    
-    
-    def plot_ema_crossover_dynamics(self):
-        """[4/4] EMA Crossover Dynamics"""
-        print("\n📊 [4/4] EMA Crossover Dynamics 생성 중...")
-        
-        p = self.best
-        engine = FiniteHorizonMACD(int(p['short_N']), int(p['long_N']), 
-                                   int(p['signal_N']), p['alpha'])
-        result_df = engine.calculate(self.df, price_col='Close')
-        
-        prices = self.df['Close'].values.astype(float)
-        ema_short = engine._calculate_finite_ema(prices, int(p['short_N']))
-        ema_long = engine._calculate_finite_ema(prices, int(p['long_N']))
-        
-        ema_short = pd.Series(ema_short, index=self.df.index)
-        ema_long = pd.Series(ema_long, index=self.df.index)
-        ema_diff = ema_short - ema_long
-        
-        prev_diff = ema_diff.shift(1)
-        golden_cross = (prev_diff <= 0) & (ema_diff > 0)
-        dead_cross = (prev_diff >= 0) & (ema_diff < 0)
-        
-        plot_days = min(252, len(self.df))
-        plot_range = self.df.index[-plot_days:]
-        
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(18, 10), sharex=True,
-                                       gridspec_kw={'height_ratios': [2, 1]})
-        
-        ax1.plot(plot_range, self.df.loc[plot_range, 'Close'],
-                color='black', linewidth=1.5, alpha=0.7, label='Price')
-        ax1.plot(plot_range, ema_short.loc[plot_range],
-                color='orange', linewidth=2, label=f'Short EMA (N={int(p["short_N"])})')
-        ax1.plot(plot_range, ema_long.loc[plot_range],
-                color='purple', linewidth=2, label=f'Long EMA (N={int(p["long_N"])})')
-        
-        gc_in_range = golden_cross.loc[plot_range]
-        ax1.scatter(plot_range[gc_in_range], 
-                   self.df.loc[plot_range[gc_in_range], 'Close'],
-                   marker='^', s=200, color='gold', edgecolors='red', 
-                   linewidths=2, zorder=10, label='Golden Cross')
-        
-        dc_in_range = dead_cross.loc[plot_range]
-        ax1.scatter(plot_range[dc_in_range], 
-                   self.df.loc[plot_range[dc_in_range], 'Close'],
-                   marker='v', s=200, color='gray', edgecolors='blue', 
-                   linewidths=2, zorder=10, label='Dead Cross')
-        
-        ax1.set_title(f"주가 및 EMA 동역학\n" +
-                     f"(Short EMA: {int(p['short_N'])}, Long EMA: {int(p['long_N'])}, α={p['alpha']:.4f})",
-                     fontsize=14, fontweight='bold')
-        ax1.set_ylabel('Price / EMA', fontsize=11)
-        ax1.legend(loc='best', fontsize=10)
-        ax1.grid(True, alpha=0.3)
-        
-        ax2.plot(plot_range, ema_diff.loc[plot_range],
-                color='green', linewidth=2, label='EMA Difference (Short - Long)')
-        ax2.axhline(0, color='black', linewidth=1)
-        ax2.fill_between(plot_range, 0, ema_diff.loc[plot_range],
-                        where=ema_diff.loc[plot_range] >= 0, 
-                        color='red', alpha=0.3, label='Short > Long (상승 추세)')
-        ax2.fill_between(plot_range, 0, ema_diff.loc[plot_range],
-                        where=ema_diff.loc[plot_range] < 0, 
-                        color='blue', alpha=0.3, label='Short < Long (하락 추세)')
-        
-        ax2.scatter(plot_range[gc_in_range], [0] * gc_in_range.sum(),
-                   marker='^', s=200, color='gold', edgecolors='red', 
-                   linewidths=2, zorder=10)
-        ax2.scatter(plot_range[dc_in_range], [0] * dc_in_range.sum(),
-                   marker='v', s=200, color='gray', edgecolors='blue', 
-                   linewidths=2, zorder=10)
-        
-        ax2.set_title("EMA Difference (MACD Line)", fontsize=12, fontweight='bold')
-        ax2.set_xlabel('Date', fontsize=11)
-        ax2.set_ylabel('Difference', fontsize=11)
-        ax2.legend(loc='best', fontsize=10)
-        ax2.grid(True, alpha=0.3)
-        
-        stats_text = (f"기간 내 크로스 통계:\n"
-                     f"  Golden Cross: {gc_in_range.sum()}회\n"
-                     f"  Dead Cross: {dc_in_range.sum()}회\n"
-                     f"  평균 EMA 차이: {ema_diff.loc[plot_range].mean():.2f}")
-        ax1.text(0.02, 0.98, stats_text, transform=ax1.transAxes,
-                ha='left', va='top', fontsize=10,
-                bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
-        plt.tight_layout()
-        
-        # ★★★ PNG 저장 추가 ★★★
-        filename = f"7_ema_crossover_{self.opt.ticker}.png"
-        plt.savefig(filename, dpi=300, bbox_inches='tight')
-        print(f"💾 저장: {filename}")
-        
-        plt.show()
-        print("✅ EMA Crossover Dynamics 완료\n")
-    
-    
     def generate_all_visualizations(self):
-        """모든 추가 시각화 생성 (4개)"""
+        """모든 추가 시각화 생성 (2개)"""
         print("\n" + "="*70)
-        print("🚀 전체 추가 시각화 생성 시작 (4개)")
+        print("🚀 전체 추가 시각화 생성 시작 (2개)")
         print("="*70 + "\n")
         
         tasks = [
             ("가중치 분포 곡선", self.plot_weight_distribution),
-            ("Standard vs Mutant 비교", self.plot_standard_vs_mutant_comparison),
-            ("히스토그램 확대 비교", self.plot_histogram_zoom_comparison),
-            ("EMA Crossover Dynamics", self.plot_ema_crossover_dynamics)
+            ("Standard vs Mutant 비교", self.plot_standard_vs_mutant_comparison)
         ]
         
         for task_name, task_func in tqdm(tasks, desc="시각화 생성 중"):
@@ -1064,7 +841,7 @@ class EnhancedVisualization:
             task_func()
         
         print("\n" + "="*70)
-        print("✅ 전체 추가 시각화 생성 완료! (4개)")
+        print("✅ 전체 추가 시각화 생성 완료! (2개)")
         print("="*70 + "\n")
 
 
