@@ -3,19 +3,6 @@
 
 전통적인 MACD의 한계를 보완하기 위해 Finite 시계열 방식의 MACD를 구현하고, KOSPI 지수 및 국내 개별종목에 최적화된 트레이딩 파라미터를 찾아내는 정밀 분석 도구입니다.
 
-주요 기능
-1. 데이터 자동 수급: yfinance를 통한 주가 데이터 다운로드.
-2. Finite MACD 최적화: SNR(Signal-to-Noise Ratio)을 기반으로 한 ```short_N```, ```long_N```, ```signal_N```, ```alpha``` 값의 최적 조합 탐색.
-3. 성과 분석: 승률(Win Rate: 수익거래/전체거래), 총 손익(Gross Profit/Loss), 거래 횟수 등 상세 지표 산출.
-4. 시각화 대시보드: 실행이 완료되면 matplotlib 창이 팝업되거나 노트북 셀에 차트가 출력됩니다.
-    - 주가 및 MACD 시그널 차트
-    - 수익률 분포 및 드로다운(Drawdown) 분석
-    - 트레이딩 진입/청산 지점 시각화
-6. 데이터 내보내기: 실행 폴더 내에 Finite_MACD_Final_종목명.xlsx 파일이 생성됩니다.
-    - Optimization: 모든 파라미터 조합별 성과
-    - Trade_Log: 진입/청산 시점 및 개별 수익률 기록
-    - Best_Params: 최적의 SNR을 기록한 설정값
-
 # 설치 및 실행 방법
 
 1. 필수 라이브러리 설치
@@ -34,7 +21,7 @@ tqdm: 최적화 진행률을 시각적으로 보여줍니다.
 터미널에서 파일이 있는 폴더로 이동합니다.
 아래 명령어를 실행합니다.
 ```
-python "macd_개별종목(삼전).py"
+python "{파일명}.py"
 ```
 
 4. 주요 설정 변경
@@ -42,9 +29,9 @@ python "macd_개별종목(삼전).py"
 
 KOSPI 지수: ``` ticker="^KS11" ```
 
-삼성전자: ``` ticker="005930.KS" ```
+KB금융: ``` ticker="105560.ks" ```
 
-기간 설정: ``` start_date="2013-01-01", end_date="2025-12-31" ```
+기간 설정: ``` start_date="2010-01-01", end_date="2026-01-25" ```
 
 # Troubleshooting
 1. Numba 관련 오류 
